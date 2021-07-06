@@ -50,7 +50,7 @@ router.post("/signup", (req, res, next) => {
     User.find({username: req.body.username}).exec().then(user =>{
         if(user){
             return res.status(409).json({
-                message: "Username exists"
+                message: "Username already in use"
             });
         }
     });
@@ -155,6 +155,7 @@ router.post("/login", (req, res, next) => {
 });
 
 // Deprecated Method
+/*
 router.post("/", (req, res, next) => {
 	const user = new User({
 		_id: new mongoose.Types.ObjectId(),
@@ -183,6 +184,7 @@ router.post("/", (req, res, next) => {
 			res.status(500).json({ error: err });
 		});
 });
+*/
 
 
 //Get single User
