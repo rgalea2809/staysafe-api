@@ -9,7 +9,7 @@ const User = require("../models/user");
 //get all users
 router.get("/", (req, res, next) => {
 	User.find()
-		.select("username password _id")
+		.select("username password _id email phone")
 		.exec()
 		.then((docs) => {
 			const response = {
