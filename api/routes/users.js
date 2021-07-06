@@ -46,113 +46,125 @@ router.get("/", (req, res, next) => {
 
 //Sign Up New User
 router.post("/signup", (req, res, next) => {
+	var couldLog = true;
 
-    User.find({username: req.body.username}).exec().then(user =>{
-        if(user.length > 0){
-            return res.status(409).json({
-                message: "Username already in use",
-				user: user
-            });
-        }
-    });
-
-	User.find({email: req.body.email}).exec().then(user =>{
-        if(user.length > 0){
-            return res.status(409).json({
-                message: "Email already registered"
-            });
-        }
-    });
-
-
-	bcrypt.hash(req.body.password, 10, (error, hash) => {
-		if (error) {
-			return res.status(500).json({
-				error: error,
-			});
-		} else {
-			const user = new User({
-				_id: new mongoose.Types.ObjectId(),
-				username: req.body.username,
-				password: hash,
-				email: req.body.email,
-				phone: req.body.phone
-			});
-
-			user.save()
-				.then((result) => {
-					console.log(result);
-					res.status(201).json({
-						message: "Signed user successfully",
-						createdUser: {
-							username: result.username,
-							password: result.password,
-							email: result.email,
-							phone: result.phone,
-							_id: result._id,
-							request: {
-								type: "GET",
-								url:
-									"http://localhost:3000/users/" + result._id,
-							},
-						},
-					});
-				})
-				.catch((err) => {
-					console.log(err);
-					res.status(500).json({ error: err });
+	User.find({ username: req.body.username })
+		.exec()
+		.then((user) => {
+			if (user.length > 0) {
+				couldLog = false;
+				return res.status(409).json({
+					message: "Username already in use",
+					user: user,
 				});
-		}
-	});
+			}
+		});
+
+	User.find({ email: req.body.email })
+		.exec()
+		.then((user) => {
+			if (user.length > 0) {
+				couldLog = false;
+				return res.status(409).json({
+					message: "Email already registered",
+				});
+			}
+		});
+
+	if (couldLog) {
+		bcrypt.hash(req.body.password, 10, (error, hash) => {
+			if (error) {
+				return res.status(500).json({
+					error: error,
+				});
+			} else {
+				const user = new User({
+					_id: new mongoose.Types.ObjectId(),
+					username: req.body.username,
+					password: hash,
+					email: req.body.email,
+					phone: req.body.phone,
+				});
+
+				user.save()
+					.then((result) => {
+						console.log(result);
+						res.status(201).json({
+							message: "Signed user successfully",
+							createdUser: {
+								username: result.username,
+								password: result.password,
+								email: result.email,
+								phone: result.phone,
+								_id: result._id,
+								request: {
+									type: "GET",
+									url:
+										"http://localhost:3000/users/" +
+										result._id,
+								},
+							},
+						});
+					})
+					.catch((err) => {
+						console.log(err);
+						res.status(500).json({ error: err });
+					});
+			}
+		});
+	}
 });
 
 //log in an user
 router.post("/login", (req, res, next) => {
-    User.find({email: req.body.email})
-    .exec()
-    .then(user => {
-        if(user.length < 1){
-            return res.status(401).json({
-                message: "Auth Failed"
-            });
-        }
+	User.find({ email: req.body.email })
+		.exec()
+		.then((user) => {
+			if (user.length < 1) {
+				return res.status(401).json({
+					message: "Auth Failed",
+				});
+			}
 
-        bcrypt.compare(req.body.password, user[0].password, (err, result)=>{
-            if(err){
-                return res.status(401).json({
-                    message: "Auth Failed"
-                });
-            }
+			bcrypt.compare(
+				req.body.password,
+				user[0].password,
+				(err, result) => {
+					if (err) {
+						return res.status(401).json({
+							message: "Auth Failed",
+						});
+					}
 
-            if(result){
+					if (result) {
+						//Add TOken to Session
+						const token = jwt.sign(
+							{
+								username: user[0].username,
+								id: user[0]._id,
+							},
+							process.env.JWT_KEY,
+							{}
+						);
 
-                //Add TOken to Session
-                const token = jwt.sign({
-                    username: user[0].username,
-                    id: user[0]._id
-                }, process.env.JWT_KEY, 
-                {
-                }
-                )
+						return res.status(200).json({
+							message: "Auth Successful",
+							token: token,
+						});
+					}
 
-
-                return res.status(200).json({
-                    message: "Auth Successful",
-                    token: token
-                });
-            }
-
-            return res.status(401).json({
-                message: "Auth Failed"
-            });
-        });
-    })
-    .catch(err => {
-        console.log(err);
-        res.status(500).json({
-            error: err
-        });
-    });
+					return res.status(401).json({
+						message: "Auth Failed",
+					});
+				}
+			);
+		})
+		.catch((err) => {
+			console.log(err);
+			res.status(500).json({
+				error: err,
+			});
+		});
 });
 
 // Deprecated Method
@@ -186,7 +198,6 @@ router.post("/", (req, res, next) => {
 		});
 });
 */
-
 
 //Get single User
 router.get("/:userId", (req, res, next) => {
