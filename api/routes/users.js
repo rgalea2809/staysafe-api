@@ -50,7 +50,8 @@ router.post("/signup", (req, res, next) => {
     User.find({username: req.body.username}).exec().then(user =>{
         if(user){
             return res.status(409).json({
-                message: "Username already in use"
+                message: "Username already in use",
+				user: user
             });
         }
     });
