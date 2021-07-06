@@ -18,6 +18,8 @@ router.get("/", (req, res, next) => {
 					return {
 						username: doc.username,
 						password: doc.password,
+						email: doc.email,
+						phone: doc.phone,
 						_id: doc._id,
 						request: {
 							type: "GET",
@@ -53,6 +55,14 @@ router.post("/signup", (req, res, next) => {
         }
     });
 
+	User.find({email: req.body.email}).exec().then(user =>{
+        if(user){
+            return res.status(409).json({
+                message: "Email already registered"
+            });
+        }
+    });
+
 
 	bcrypt.hash(req.body.password, 10, (error, hash) => {
 		if (error) {
@@ -64,6 +74,8 @@ router.post("/signup", (req, res, next) => {
 				_id: new mongoose.Types.ObjectId(),
 				username: req.body.username,
 				password: hash,
+				email: req.body.email,
+				phone: req.body.phone
 			});
 
 			user.save()
@@ -71,9 +83,11 @@ router.post("/signup", (req, res, next) => {
 					console.log(result);
 					res.status(201).json({
 						message: "Signed user successfully",
-						createdProduct: {
+						createdUser: {
 							username: result.username,
 							password: result.password,
+							email: result.email,
+							phone: result.phone,
 							_id: result._id,
 							request: {
 								type: "GET",
@@ -93,7 +107,7 @@ router.post("/signup", (req, res, next) => {
 
 //log in an user
 router.post("/login", (req, res, next) => {
-    User.find({username: req.body.username})
+    User.find({email: req.body.email})
     .exec()
     .then(user => {
         if(user.length < 1){
