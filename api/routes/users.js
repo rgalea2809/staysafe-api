@@ -48,7 +48,7 @@ router.get("/", (req, res, next) => {
 router.post("/signup", (req, res, next) => {
 
     User.find({username: req.body.username}).exec().then(user =>{
-        if(user){
+        if(user.length > 0){
             return res.status(409).json({
                 message: "Username already in use",
 				user: user
@@ -57,7 +57,7 @@ router.post("/signup", (req, res, next) => {
     });
 
 	User.find({email: req.body.email}).exec().then(user =>{
-        if(user){
+        if(user.length > 0){
             return res.status(409).json({
                 message: "Email already registered"
             });
